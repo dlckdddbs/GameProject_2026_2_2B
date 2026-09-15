@@ -18,9 +18,13 @@ public class Building : MonoBehaviour
 
     public BuildingEvents buildingEvents;
 
+    private DeliveryOrderSystem orderSystem;
+
     private void Start()
     {
         SetupBuilding();
+        orderSystem = FindFirstObjectByType<DeliveryOrderSystem>();
+        CreateNameTag();
     }
 
     void HandleDriverService(DeliveryDriver dirver)
@@ -28,17 +32,28 @@ public class Building : MonoBehaviour
         switch (BuildType)
         {
             case BuildingType.Restaurant:
-                Debug.Log($"{buildingName} 에서 음식을 픽업 했습니다,");
+                if (orderSystem != null)
+                {
+                    orderSystem.OnDriverEnteredRestaurant(this);
+                }
                 break;
+
             case BuildingType.Customer:
-                Debug.Log($"{buildingName} 배달 완료,");
-                dirver.CompletDelivery();
+                if(orderSystem != null)
+                {
+                    orderSystem.OnDriverEnteredCustorm(this);
+                }
+                else 
+                    dirver.CompletDelivery();
                 break;
+
             case BuildingType.ChargingStation:
-                Debug.Log($"{buildingName} 에서 배터리를 충전 했습니다.");
+               
                 dirver.ChargeBattery();
                 break;
+            
         }
+        buildingEvents.OnServiceUsed?.Invoke(BuildType);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -72,15 +87,12 @@ public class Building : MonoBehaviour
             {
                 case BuildingType.Restaurant:
                     mat.color = Color.red;
-                    buildingName = "음식점";
                     break;
                 case BuildingType.Customer:
                     mat.color = Color.green;
-                    buildingName = "고객 집";
                     break;
                 case BuildingType.ChargingStation:
                     mat.color = Color.yellow;
-                    buildingName = "충전소";
                     break;
             }
         }
@@ -88,5 +100,24 @@ public class Building : MonoBehaviour
         if (col != null) { col.isTrigger = true; }
 
     }
+
+    void CreateNameTag()
+    {
+
+        GameObject nameTag = new GameObject("NameTag");
+        nameTag.transform.SetParent(transform);
+        nameTag.transform.localPosition = Vector3.up * 1.5f;
+
+        TextMesh textMesh = nameTag.AddComponent<TextMesh>();
+        textMesh.text = buildingName;
+        textMesh.characterSize = 0.2f;
+        textMesh.anchor = TextAnchor.MiddleCenter;
+        textMesh.color = Color.white;
+        textMesh.fontSize = 20;
+
+        nameTag.AddComponent<Bilboard>();
+    }
+
+  
 
 }
