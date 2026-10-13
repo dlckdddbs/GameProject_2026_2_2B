@@ -21,16 +21,16 @@ function success(res, code, message, data, status = 200)
     return res.status(status).json({success:true,code,message,data});
 }
 
-function failure(res, status,code,message)
+function failure(res, status , code, message)
 {
-    return res.status(status).json({success:false,code,message,data:null});
+    return res.status(status).json({success: false, code , message, data : null});
 }
 
 function createRooms()
 {
     return [
         {index : 0 , type : "MONSTER" , state: "ACTIVE" , monsterName : "슬라임", monsterHp:30, monsterAttack: 5, rewardGold : 10},
-        {index : 1 , type : "TRESAURE" , state: "LOCKED" , monsterName : "", monsterHp:0, monsterAttack: 0, rewardGold : 20},
+        {index : 1 , type : "TREASURE" , state: "LOCKED" , monsterName : "", monsterHp:0, monsterAttack: 0, rewardGold : 20},
         {index : 2 , type : "HEAL" , state: "LOCKED" , monsterName : "", monsterHp:0, monsterAttack: 0, rewardGold : 0},
         {index : 3 , type : "MONSTER" , state: "LOCKED" , monsterName : "고블린", monsterHp:45, monsterAttack: 8, rewardGold : 25},
         {index : 4 , type : "EXIT" , state: "LOCKED" , monsterName : "", monsterHp:0, monsterAttack: 0, rewardGold : 0}
@@ -67,7 +67,7 @@ app.post("/api/dungeon/enter" , (req, res) => {
 
     if(dungeonRun && dungeonRun.state === "IN_PROGRESS")
     {
-        return failure(res, 409, "RUN_ALREAY_ACTIVE", "이미 탐험 중입니다.");
+        return failure(res, 409, "RUN_ALREADY_ACTIVE", "이미 탐험 중입니다.");
     }
 
     player.hp = player.maxHp;
@@ -92,12 +92,12 @@ app.post("/api/dungeon/action" , (req,res) => {
     const action = req.body.action;
     const room = currentRoom();
 
-    if(action === "ATTACK" && room.type === "MONSTER"&&room.state =="ACTIVE"){
+    if(action === "ATTACK" && room.type === "MONSTER"&&room.state ==="ACTIVE"){
         room.monsterHp = Math.max(0,room.monsterHp - player.attack);
 
         if(room.monsterHp ===0)
         {
-            room.state="CLERAED";
+            room.state="CLEARED";
             dungeonRun.runGold +=room.rewardGold;
             return success(res,"MONSTER_DEFEATED", "몬스터를 처치했습니다.", gameState());
         }
@@ -135,8 +135,17 @@ if(action === "NEXT_ROOM" && room.state === "CLEARED")
 
     dungeonRun.currentRoomIndex+=1;
     currentRoom().state = "ACTIVE";
-    return success(res,"DUNGEON_RETUREND","탐험을 마치고 귀한했습니다.",gameState());
+    return success(res,"ROOM_ADVANCED","다음 방으로 이동 했습니다.",gameState());
 }
+if(action === "RETURN" && room.type === "EXIT" && room.state === "ACTIVE")
+{
+    player.gold += dungeonRun.runGold;
+    dungeonRun.runGold = 0;
+    dungeonRun.state = "RETURNED";
+
+    return success(res, "DUNGEON_RETURNED", "탐험을 마치고 귀환했습니다." , gameState());
+}
+
     return failure(res,409,"ACTION_NOT_ALLOWED","현재 방에서 할 수 없는 행동입니다.");
 });
 
