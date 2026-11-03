@@ -1,5 +1,4 @@
-const {add} = require("./math.js");
-
+const {add} = require("./Math.js");
 
 let num = 42;                    //int
 var name = "TOM";                //string
@@ -29,8 +28,6 @@ else
 {
     console.log("Number is Lower than 30")
 }
-
-
 
 
 for(var i =0; i<5; i++){
